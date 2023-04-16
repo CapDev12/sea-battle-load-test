@@ -13,23 +13,18 @@ class BasicSimulation extends Simulation {
   val playerId1: String = "4e0453ee-c7ba-11ec-9d64-0242ac120002"
   val playerId2: String = "541042b6-c7ba-11ec-9d64-0242ac120002"
 
-  val delay: FiniteDuration = 2.seconds
-  val shotDelay: FiniteDuration = 1.seconds
+  val delay: FiniteDuration = 1000.millis
+  val shotDelay: FiniteDuration = 10.millis
 
   val grpcConf: StaticGrpcProtocol = grpc(managedChannelBuilder(name = "localhost", port = 8080).usePlaintext())
   //.warmUpCall(BattleServiceGrpc.METHOD_START, Start.defaultInstance)
 
   val ships: Seq[Ship] = Seq(
-    Ship(1, 1, Direction.Horisontal, 4),
-    Ship(1, 3, Direction.Horisontal, 3),
-    Ship(4, 3, Direction.Horisontal, 3),
-    Ship(1, 5, Direction.Horisontal, 2),
-    Ship(4, 5, Direction.Horisontal, 2),
-    Ship(7, 5, Direction.Horisontal, 2),
-    Ship(1, 7, Direction.Horisontal, 1),
-    Ship(3, 7, Direction.Horisontal, 1),
-    Ship(5, 7, Direction.Horisontal, 1),
-    Ship(7, 7, Direction.Horisontal, 1)
+        Ship(1, 1, Direction.Horisontal, 4),
+        Ship(1, 3, Direction.Horisontal, 3), Ship(5, 3, Direction.Horisontal, 3),
+        Ship(1, 5, Direction.Horisontal, 2), Ship(4, 5, Direction.Horisontal, 2), Ship(7, 5, Direction.Horisontal, 2),
+        Ship(1, 7, Direction.Horisontal, 1), Ship(3, 7, Direction.Horisontal, 1), Ship(5, 7, Direction.Horisontal, 1),
+        Ship(10, 10, Direction.Horisontal, 1)
   )
 
   val scn: ScenarioBuilder =
@@ -65,11 +60,10 @@ class BasicSimulation extends Simulation {
           )
           .check(statusCode is Status.Code.OK)
       )
-      .pause(delay)
       .foreach(Seq(1,2,3,4,5,6,7,8,9,10), "y") {
         foreach(Seq(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), "x") {
           pause(shotDelay)
-          .exec(
+          exec(
             grpc("shot")
               .rpc(BattleServiceGrpc.METHOD_SHOT)
               .payload(
@@ -83,8 +77,8 @@ class BasicSimulation extends Simulation {
             grpc("shot")
               .rpc(BattleServiceGrpc.METHOD_SHOT)
               .payload(
-                Shot("gameId", playerId2, 1, 1)
-                  .updateExpr(_.gameId :~ $("gameId"))
+                Shot("gameId", playerId2)
+                  .updateExpr(_.gameId :~ $("gameId"), _.x :~ $("x"), _.y :~ $("y"))
               )
               .check(statusCode is Status.Code.OK)
           )
